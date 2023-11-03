@@ -6,21 +6,26 @@ WORKDIR /app
 
 # only copy package.json
 COPY package.json .
+COPY yarn.lock .
 
 # download the project dependencies
-RUN npm install
+RUN yarn install
 
 # copy everything from the react app folder to the /app folder in the container
 COPY . .
 
 # package up the react project in the /app directory
-RUN npm run build
+RUN yarn build
 
 # stage 2
 FROM nginx:1.23-alpine
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY --from=builder /app/build .
 
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+#COPY --from=build /app/build /usr/share/nginx/html
+
+#COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
